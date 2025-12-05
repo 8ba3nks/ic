@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<h2>Smart Word → Image Display (PNG Version)</h2>
+<h2>Smart Word → Image Display (PNG from /ic/ Directory)</h2>
 
 <input type="text" id="inputText" placeholder="Example: american, a-'ng-a, ba-ng'bi" size="40">
 <button onclick="displayImages()">Show</button>
@@ -21,7 +21,7 @@
 <div id="output"></div>
 
 <script>
-// Priority syllables (you can expand this list)
+// Priority syllables (expand as needed)
 const PRIORITY = [
     "me","ri","ca","ba","bi","bu","be","bo",
     "ka","ki","ku","ke","ko",
@@ -33,24 +33,24 @@ const VOWELS = ["a", "i", "u", "e", "o"];
 // Special characters
 const SPECIAL = ["-", "'", "`"];
 
-// Smart splitter
+// Smart syllable parser
 function smartSplit(text) {
-    text = text.toLowerCase().replace(/\./g, ""); // dots removed for smart parsing
+    text = text.toLowerCase().replace(/\./g, "");
     let result = [];
     let i = 0;
 
     while (i < text.length) {
 
-        // 0. Special characters
+        // Special characters
         if (SPECIAL.includes(text[i])) {
             result.push(text[i]);
             i++;
             continue;
         }
 
-        // 1. Priority syllables
+        // Priority syllables (ng, me, ri, etc.)
         let chunk = null;
-        for (let p of PRIORITY.sort((a,b)=>b.length - a.length)) {
+        for (let p of PRIORITY.sort((a,b)=>b.length-a.length)) {
             if (text.startsWith(p, i)) {
                 chunk = p;
                 break;
@@ -63,9 +63,46 @@ function smartSplit(text) {
             continue;
         }
 
-        // 2. CV pattern
+        // CV rule
         if (i+1 < text.length &&
             !VOWELS.includes(text[i]) &&
             VOWELS.includes(text[i+1])) {
 
-            result.push(text[i] + text[i+1])
+            result.push(text[i] + text[i+1]);
+            i += 2;
+            continue;
+        }
+
+        // Single fallback
+        result.push(text[i]);
+        i++;
+    }
+
+    return result;
+}
+
+// Display images
+function displayImages() {
+    const raw = document.getElementById("inputText").value.trim();
+
+    let parts = raw.includes(".") ? raw.split(".") : smartSplit(raw);
+
+    const container = document.getElementById("output");
+    container.innerHTML = "";
+
+    parts.forEach(p => {
+        if (!p) return;
+
+        const img = document.createElement("img");
+
+        // CHANGED: now loads from /ic/
+        img.src = "/ic/" + p + ".png";
+        img.alt = p;
+
+        container.appendChild(img);
+    });
+}
+</script>
+
+</body>
+</html>
