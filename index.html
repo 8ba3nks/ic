@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Word → Image Display</title>
+    <style>
+        #output img {
+            width: 80px;
+            height: 80px;
+            margin-right: 5px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Smart Word → Image Display (with NG + special chars)</h2>
+
+<input type="text" id="inputText" placeholder="---" size="40">
+<button onclick="displayImages()">Show</button>
+
+<div id="output"></div>
+
+<script>
+// Priority syllables (you can expand this list)
+const PRIORITY = [
+    "me","ri","ca","ba","bi","bu","be","bo",
+    "ka","ki","ku","ke","ko",
+    "ng"
+];
+
+const VOWELS = ["a", "i", "u", "e", "o"];
+
+// Special characters to treat as separate blocks
+const SPECIAL = ["-", "'", "`"];
+
+// Smart splitter
+function smartSplit(text) {
+    text = text.toLowerCase().replace(/\./g, ""); // remove dots because smart split replaces them
+    let result = [];
+    let i = 0;
+
+    while (i < text.length) {
+
+        // 0. Special characters handled immediately
+        if (SPECIAL.includes(text[i])) {
+            result.push(text[i]);
+            i++;
+            continue;
+        }
+
+        // 1. PRIORITY syllables (ng, me, ri, etc.)
+        let chunk = null;
+        for (let p of PRIORITY.sort((a,b)=>b.length-a.length)) {
+            if (text.startsWith(p, i)) {
+                chunk = p;
+                break;
+            }
+        }
+
+        if (chunk) {
+            result.push(chunk);
+            i += chunk.length;
+            continue;
+        }
+
+        // 2. CV rule (consonant + vowel)
+        if (i+1 < text.length &&
+            !VOWELS.includes(text[i]) &&
+            VOWELS.includes(text[i+1])) {
+
+            result.push(text[i] + text[i+1]);
+            i += 2;
+            continue;
+        }
+
+        // 3. Single fallback character
+        result.push(text[i]);
+        i++;
+    }
+
+    return result;
+}
+
+// Display images
+function displayImages() {
+    const raw = document.getElementById("inputText").value.trim();
+
+    let parts;
+
+    if (raw.includes(".")) {
+        parts = raw.split(".");
+    } else {
+        parts = smartSplit(raw);
+    }
+
+    const container = document.getElementById("output");
+    container.innerHTML = "";
+
+    parts.forEach(p => {
+        if (!p) return;
+        const img = document.createElement("img");
+
+        // image name is literally the symbol or syllable
+        // example "/" + "-".jpg
+        img.src = "/" + p + ".jpg";
+        img.alt = p;
+
+        container.appendChild(img);
+    });
+}
+</script>
+
+</body>
+</html>
